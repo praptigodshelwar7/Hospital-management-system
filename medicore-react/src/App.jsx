@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-
-const API_URL = "http://localhost:8080/api/patients";
+const API_BASE = import.meta.env.VITE_API_URL || "";
+const API_URL = `${API_BASE}/api/patients`;
 const TOTAL_BEDS = 30;
 
 // ─── Colour tokens (matches original JavaFX palette) ──────────────────────────
