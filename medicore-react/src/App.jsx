@@ -2,34 +2,36 @@ import { useState, useEffect, useCallback, useRef } from "react";
 const API_BASE = import.meta.env.VITE_API_URL || "";
 const API_URL = `${API_BASE}/api/patients`;
 const TOTAL_BEDS = 30;
+const APP_NAME = "AarogyaCare Hospital";
 
 // ─── Colour tokens (matches original JavaFX palette) ──────────────────────────
 const C = {
-  bg:       "#060d1a",
-  bg2:      "#091224",
-  card:     "#0d1b2e",
-  border:   "#1a2f4a",
-  borderHl: "#2a4a70",
-  tMain:    "#e8f0fe",
-  tSub:     "#5a7a99",
-  tDim:     "#2d4a66",
-  blue:     "#1a6ef5",
-  blueD:    "#1255cc",
-  blueG:    "#4d94ff",
-  red:      "#e03a3a",
-  redD:     "#b82a2a",
-  redG:     "#ff6b6b",
-  green:    "#10d67e",
-  amber:    "#f59e0b",
-  icuBg:    "#1f0a0a",
-  icuBdr:   "#c53030",
-  icuName:  "#fc8181",
-  genBg:    "#071628",
-  genBdr:   "#2563eb",
-  genName:  "#7eb8f7",
-  freeBg:   "#04160e",
-  freeBdr:  "#0d9466",
-  freeName: "#34d399",
+  bg:       "#07111f",
+  bg2:      "#10243a",
+  card:     "rgba(255,255,255,0.08)",
+  border:   "rgba(255,255,255,0.16)",
+  borderHl: "rgba(125,211,252,0.55)",
+  tMain:    "#f8fbff",
+  tSub:     "#a8c7dd",
+  tDim:     "#6f91aa",
+  blue:     "#38bdf8",
+  blueD:    "#0284c7",
+  blueG:    "#7dd3fc",
+  red:      "#fb7185",
+  redD:     "#e11d48",
+  redG:     "#fda4af",
+  green:    "#34d399",
+  amber:    "#fbbf24",
+  purple:   "#a78bfa",
+  icuBg:    "rgba(127,29,29,0.35)",
+  icuBdr:   "#fb7185",
+  icuName:  "#fecdd3",
+  genBg:    "rgba(14,165,233,0.22)",
+  genBdr:   "#38bdf8",
+  genName:  "#bae6fd",
+  freeBg:   "rgba(6,78,59,0.28)",
+  freeBdr:  "#34d399",
+  freeName: "#bbf7d0",
 };
 
 // ─── Utility ──────────────────────────────────────────────────────────────────
@@ -154,7 +156,7 @@ function ActionButton({ children, onClick, gradient, hoverGradient, glowColor, d
         border: "none",
         cursor: disabled ? "not-allowed" : "pointer",
         transition: "transform 0.1s, box-shadow 0.15s, background 0.15s",
-        transform: hovered && !disabled ? "scale(1.015)" : "scale(1)",
+        transform: hovered && !disabled ? "translateY(-2px) scale(1.02)" : "scale(1)",
         boxShadow: hovered && !disabled ? `0 0 20px ${glowColor}55` : "none",
         opacity: disabled ? 0.5 : 1,
         fontFamily: "inherit",
@@ -193,15 +195,57 @@ function Card({ children, style = {} }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: `linear-gradient(to bottom, ${C.card}, ${C.bg2})`,
-        borderRadius: 14,
+        background: `linear-gradient(135deg, ${C.card}, rgba(255,255,255,0.04))`,
+        backdropFilter: "blur(18px)",
+        WebkitBackdropFilter: "blur(18px)",
+        borderRadius: 22,
         border: `1px solid ${hovered ? C.borderHl : C.border}`,
-        padding: 18,
-        transition: "border-color 0.2s",
+        padding: 20,
+        transition: "all 0.25s ease",
+        transform: hovered ? "translateY(-3px)" : "translateY(0)",
+        boxShadow: hovered ? "0 18px 45px rgba(56,189,248,0.16)" : "0 10px 30px rgba(0,0,0,0.22)",
         ...style,
       }}
     >
       {children}
+    </div>
+  );
+}
+
+
+function PatientDetailsCard({ patient }) {
+  if (!patient) {
+    return (
+      <div style={{
+        background: "rgba(255,255,255,0.06)",
+        border: `1px dashed ${C.borderHl}`,
+        borderRadius: 16,
+        padding: 14,
+        color: C.tSub,
+        fontSize: 12,
+      }}>
+        Select a patient or click an occupied bed to view details.
+      </div>
+    );
+  }
+  return (
+    <div style={{
+      background: "linear-gradient(135deg, rgba(56,189,248,0.16), rgba(167,139,250,0.12))",
+      border: `1px solid ${C.borderHl}`,
+      borderRadius: 18,
+      padding: 14,
+      boxShadow: "0 14px 35px rgba(56,189,248,0.12)",
+      animation: "popIn 0.35s ease",
+    }}>
+      <div style={{ fontSize: 15, fontWeight: 800, color: C.tMain, marginBottom: 8 }}>
+        👤 {patient.name}
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 12 }}>
+        <span>🛏 Bed: <b>{patient.bedNumber}</b></span>
+        <span>🏥 Ward: <b>{patient.ward}</b></span>
+        <span>🎂 Age: <b>{patient.age || "—"}</b></span>
+        <span>🩺 Diagnosis: <b>{patient.diagnosis || "—"}</b></span>
+      </div>
     </div>
   );
 }
@@ -251,7 +295,7 @@ export default function App() {
   const [patients,       setPatients]       = useState([]);
   const [apiStatus,      setApiStatus]      = useState("connecting");
   const [busy,           setBusy]           = useState(false);
-  const [output,         setOutput]         = useState(`MediCore HMS ready.  API → ${API_URL}\nLoading bed status…`);
+  const [output,         setOutput]         = useState(`${APP_NAME} ready.  API → ${API_URL}\nLoading bed status…`);
   const outputRef = useRef(null);
 
   // Admit form
@@ -307,6 +351,7 @@ export default function App() {
   // Build bed map
   const bedMap = {};
   patients.forEach(p => { if (p.bedNumber) bedMap[Number(p.bedNumber)] = p; });
+  const selectedPatient = patients.find(p => p.name === dPatient);
 
   // ── Admit
   const handleAdmit = async () => {
@@ -415,12 +460,15 @@ export default function App() {
   const statusText  = apiStatus === "online" ? "API Online" : apiStatus === "offline" ? "API Offline" : "Connecting…";
 
   return (
-    <div style={{ background: C.bg, minHeight: "100vh", fontFamily: "'Segoe UI', 'SF Pro Display', system-ui, sans-serif", color: C.tMain }}>
+    <div style={{ background: `radial-gradient(circle at top left, rgba(56,189,248,0.22), transparent 30%), radial-gradient(circle at top right, rgba(167,139,250,0.20), transparent 28%), linear-gradient(135deg, ${C.bg}, ${C.bg2})`, minHeight: "100vh", fontFamily: "'Segoe UI', 'SF Pro Display', system-ui, sans-serif", color: C.tMain }}>
+      <style>{`@keyframes popIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}} @keyframes pulseGlow{0%,100%{box-shadow:0 0 0 rgba(52,211,153,0)}50%{box-shadow:0 0 28px rgba(52,211,153,.28)}}`}</style>
 
       {/* ── Header ── */}
       <div style={{ position: "sticky", top: 0, zIndex: 100 }}>
         <div style={{
-          background: "linear-gradient(to bottom, #071428, #060d1a)",
+          background: "rgba(7,17,31,0.72)",
+          backdropFilter: "blur(18px)",
+          WebkitBackdropFilter: "blur(18px)",
           borderBottom: `1px solid ${C.border}`,
           padding: "14px 22px",
           display: "flex",
@@ -432,8 +480,8 @@ export default function App() {
 
           {/* Title */}
           <div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: C.tMain }}>MediCore HMS</div>
-            <div style={{ fontSize: 11, color: C.tSub }}>30-Bed Hospital Management System</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: C.tMain }}>{APP_NAME}</div>
+            <div style={{ fontSize: 11, color: C.tSub }}>Smart 30-Bed Patient Care Dashboard</div>
           </div>
 
           <div style={{ flex: 1 }} />
@@ -603,15 +651,7 @@ export default function App() {
               </div>
 
               {/* Patient info */}
-              <div style={{
-                fontSize: 11, color: C.tSub,
-                background: "#07111e",
-                border: `1px solid ${C.border}`,
-                borderRadius: 6, padding: "7px 10px",
-                minHeight: 32,
-              }}>
-                {dInfo}
-              </div>
+              <PatientDetailsCard patient={selectedPatient} />
 
               <div>
                 <FieldLabel>Hours Stayed</FieldLabel>
