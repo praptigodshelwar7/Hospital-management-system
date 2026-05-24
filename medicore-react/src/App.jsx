@@ -46,7 +46,7 @@ const fmtNum = (n) => {
 function BedCell({ bed, patient, onClickOccupied }) {
   const [hovered, setHovered] = useState(false);
   const occupied = !!patient;
-  const isICU    = patient?.ward === "ICU";
+  const isICU = patient?.ward?.toLowerCase() === "icu";
 
   const bg     = !occupied ? C.freeBg  : isICU ? C.icuBg  : C.genBg;
   const border = !occupied ? C.freeBdr : isICU ? C.icuBdr : C.genBdr;
